@@ -1,0 +1,8 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Screenshot Tool
+Comment=Professional scrolling screenshot app
+Icon=screenshot-tool
+Exec=scroll_screenshot_app
+Categories=Graphics;Photography;
