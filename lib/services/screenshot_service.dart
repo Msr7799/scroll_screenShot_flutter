@@ -1,5 +1,5 @@
 // lib/services/screenshot_service.dart
-// خدمة السكرين شوت المحدثة مع نظام التحديد الجديد
+// خدمة السكرين شوت المحدثة مع إصلاح الأخطاء والتحسينات
 
 import 'dart:async';
 import 'dart:io';
@@ -370,11 +370,11 @@ class ScreenshotService extends ChangeNotifier {
           // تطبيق مرشح تحسين الجودة
           final enhancedImage = _enhanceImage(currentImage);
           
+          // استخدام compositeImage بدون BlendMode.over (غير مدعوم)
           img.compositeImage(
             mergedImage,
             enhancedImage,
             dstY: currentY,
-            blend: img.BlendMode.over,
           );
           
           if (i < sortedImages.length - 1) {
@@ -401,7 +401,7 @@ class ScreenshotService extends ChangeNotifier {
     }
   }
 
-  /// تحسين جودة الصورة
+  /// تحسين جودة الصورة (مُصحح: استخدام int للـ radius)
   img.Image _enhanceImage(img.Image image) {
     // تطبيق تحسينات بسيطة
     var enhanced = img.Image.from(image);
@@ -409,18 +409,18 @@ class ScreenshotService extends ChangeNotifier {
     // زيادة التباين قليلاً
     enhanced = img.adjustColor(enhanced, contrast: 1.1);
     
-    // تحسين الوضوح
-    enhanced = img.gaussianBlur(enhanced, radius: 0.5);
+    // تحسين الوضوح (مُصحح: استخدام radius كـ int)
+    enhanced = img.gaussianBlur(enhanced, radius: 1);
     
     return enhanced;
   }
 
-  /// معالجة ما بعد الدمج
+  /// معالجة ما بعد الدمج (مُصحح: استخدام int للـ radius)
   img.Image _postProcessImage(img.Image image) {
     var processed = img.Image.from(image);
     
-    // إزالة الضوضاء البسيطة
-    processed = img.gaussianBlur(processed, radius: 0.3);
+    // إزالة الضوضاء البسيطة (مُصحح: استخدام radius كـ int)
+    processed = img.gaussianBlur(processed, radius: 1);
     
     // تحسين الألوان
     processed = img.adjustColor(processed, saturation: 1.05, brightness: 1.02);
@@ -507,46 +507,6 @@ class ScreenshotService extends ChangeNotifier {
     };
   }
 
-  /// تنظيف الذاكرة وإعادة التعيين
-  void clearCapture() {
-    _capturedImages.clear();
-    _progress = 0.0;
-    _status = 'جاهز';
-    _currentConfig = null;
-    notifyListeners();
-  }
-
-  /// التحقق من متطلبات النظام
-  Future<bool> checkSystemRequirements() async {
-    try {
-      // التحقق من imagemagick
-      final importCheck = await Process.run('which', ['import']);
-      if (importCheck.exitCode != 0) {
-        _status = 'خطأ: imagemagick غير مثبت';
-        return false;
-      }
-      
-      // التحقق من xdotool
-      final xdotoolCheck = await Process.run('which', ['xdotool']);
-      if (xdotoolCheck.exitCode != 0) {
-        _status = 'خطأ: xdotool غير مثبت';
-        return false;
-      }
-      
-      // التحقق من X11
-      final displayCheck = Platform.environment['DISPLAY'];
-      if (displayCheck == null || displayCheck.isEmpty) {
-        _status = 'خطأ: بيئة X11 غير متوفرة';
-        return false;
-      }
-      
-      return true;
-    } catch (e) {
-      _status = 'خطأ في التحقق من متطلبات النظام: $e';
-      return false;
-    }
-  }
-
   /// معاينة سريعة للصورة المدمجة
   Future<Uint8List?> generatePreview() async {
     if (_capturedImages.isEmpty) return null;
@@ -594,7 +554,7 @@ class ScreenshotService extends ChangeNotifier {
     }
   }
 
-  /// التحقق من متطلبات النظام
+  /// التحقق من متطلبات النظام - إصدار واحد فقط
   Future<bool> checkSystemRequirements() async {
     try {
       // التحقق من imagemagick
@@ -625,7 +585,7 @@ class ScreenshotService extends ChangeNotifier {
     }
   }
 
-  /// تنظيف الذاكرة وإعادة التعيين
+  /// تنظيف الذاكرة وإعادة التعيين - إصدار واحد فقط
   void clearCapture() {
     _capturedImages.clear();
     _progress = 0.0;
