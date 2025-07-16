@@ -1,0 +1,49 @@
+name: scroll_screenshot_app
+description: Professional scrolling screenshot app for Linux
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: ">=3.10.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # UI & Design
+  cupertino_icons: ^1.0.2
+  google_fonts: ^6.1.0
+  flutter_colorpicker: ^1.0.3
+  
+  # System & Platform
+  window_manager: ^0.3.7
+  desktop_drop: ^0.4.4
+  
+  # Image Processing
+  image: ^4.1.3
+  screenshot: ^2.1.0
+  
+  # File Management
+  path_provider: ^2.1.1
+  file_picker: ^6.1.1
+  
+  # State Management
+  provider: ^6.1.1
+  
+  # Utilities
+  path: ^1.8.3
+  uuid: ^4.1.0
+  
+  # Linux Specific
+  ffi: ^2.1.0
+  
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icons/scroll-svgrepo-com.svg
