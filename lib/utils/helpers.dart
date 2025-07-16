@@ -182,8 +182,7 @@ class AppHelpers {
   /// إضافة علامة مائية للصورة
   static Future<Uint8List?> addWatermark(
     Uint8List imageData,
-    String text,
-    {
+    String text, {
       Color color = Colors.white,
       double opacity = 0.7,
       WatermarkPosition position = WatermarkPosition.bottomRight,
@@ -192,18 +191,154 @@ class AppHelpers {
     try {
       final originalImage = img.decodeImage(imageData);
       if (originalImage == null) return null;
-      
+
       // إنشاء نسخة من الصورة الأصلية
       final watermarkedImage = img.Image.from(originalImage);
+
+      // ملاحظة: يجب عليك هنا كتابة كود رسم النص على الصورة باستخدام مكتبة image
+      // الكود الحالي غير مكتمل ويجب استكماله حسب الحاجة
+
+      // مثال: فقط إعادة الصورة الأصلية بدون تعديل
+      return Uint8List.fromList(img.encodePng(watermarkedImage));
+    } catch (e) {
+      debugPrint('خطأ في إضافة العلامة المائية: $e');
+      return null;
+    }
+  }
+
+  /// الحصول على مسار مجلد الصور الافتراضي
+  static Future<String> getDefaultPicturesPath() async {
+    try {
+      final homeDir = Platform.environment['HOME'];
+      if (homeDir != null) {
+        final picturesPath = path.join(homeDir, 'Pictures', 'Screenshots');
+        final directory = Directory(picturesPath);
+        
+        // إنشاء المجلد إذا لم يكن موجوداً
+        if (!await directory.exists()) {
+          await directory.create(recursive: true);
+        }
+        
+        return picturesPath;
+      }
       
-      // حساب موضع العلامة المائية
-      final textSize = _calculateTextSize(text);
-      final position = _calculate    // عرض رسالة نجاح
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('تم بدء التصدير بتنسيق $_selectedFormat'),
-        backgroundColor: Colors.green,
-      ),
-    );
+      // مسار احتياطي
+      return '/tmp/screenshots';
+    } catch (e) {
+      return '/tmp/screenshots';
+    }
+  }
+
+  /// التحقق من صحة المسار
+  static Future<bool> isValidPath(String pathString) async {
+    try {
+      final directory = Directory(pathString);
+      
+      // التحقق من وجود المجلد
+      if (await directory.exists()) {
+        return true;
+      }
+      
+      // محاولة إنشاء المجلد
+      try {
+        await directory.create(recursive: true);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// اقتراح مسارات شائعة
+  static List<String> getSuggestedPaths() {
+    final homeDir = Platform.environment['HOME'] ?? '/home/user';
+    
+    return [
+      path.join(homeDir, 'Pictures'),
+      path.join(homeDir, 'Pictures', 'Screenshots'),
+      path.join(homeDir, 'Desktop'),
+      path.join(homeDir, 'Downloads'),
+      path.join(homeDir, 'Documents'),
+      '/tmp/screenshots',
+    ];
+  }
+
+  /// فتح مدير الملفات في المسار المحدد
+  static Future<bool> openFileManager(String directoryPath) async {
+    try {
+      // محاولة فتح مدير الملفات الافتراضي
+      final result = await Process.run('xdg-open', [directoryPath]);
+      return result.exitCode == 0;
+    } catch (e) {
+      try {
+        // محاولة بديلة مع nautilus
+        final result = await Process.run('nautilus', [directoryPath]);
+        return result.exitCode == 0;
+      } catch (e) {
+        try {
+          // محاولة أخيرة مع dolphin
+          final result = await Process.run('dolphin', [directoryPath]);
+          return result.exitCode == 0;
+        } catch (e) {
+          return false;
+        }
+      }
+    }
+  }
+
+  /// الحصول على معلومات المجلد
+  static Future<Map<String, dynamic>> getDirectoryInfo(String directoryPath) async {
+    try {
+      final directory = Directory(directoryPath);
+      
+      if (!await directory.exists()) {
+        return {
+          'exists': false,
+          'readable': false,
+          'writable': false,
+          'fileCount': 0,
+        };
+      }
+      
+      // عدد الملفات
+      int fileCount = 0;
+      try {
+        await for (final entity in directory.list()) {
+          if (entity is File) {
+            fileCount++;
+          }
+        }
+      } catch (e) {
+        // لا يمكن قراءة المجلد
+      }
+      
+      // اختبار الكتابة
+      bool writable = false;
+      try {
+        final testFile = File(path.join(directoryPath, '.test_write'));
+        await testFile.writeAsString('test');
+        await testFile.delete();
+        writable = true;
+      } catch (e) {
+        writable = false;
+      }
+      
+      return {
+        'exists': true,
+        'readable': true,
+        'writable': writable,
+        'fileCount': fileCount,
+      };
+    } catch (e) {
+      return {
+        'exists': false,
+        'readable': false,
+        'writable': false,
+        'fileCount': 0,
+        'error': e.toString(),
+      };
+    }
   }
 }
